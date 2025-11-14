@@ -126,10 +126,12 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Projet - Interface windows.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Stego_lsb.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Projet - Interface windows.cpp" />
+    <ClCompile Include="Stego_lsb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Projet - Interface windows.rc" />
