@@ -2,7 +2,7 @@
 #include <fstream>
 #include "ImageManager.h"
 
-#define ADD_MESSAGE 3
+#define SAVE_MESSAGE 4
 #define LOAD_IMAGE 5
 #define LEAVE 6
 
@@ -11,6 +11,7 @@ ImageManager imageManager;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 HWND hImage;
+HWND hEmbedLSB;
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -29,6 +30,27 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         0, L"MainWindow", L"Gestionnaire de fichier BMP", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 1600, 900,
         NULL, NULL, hInstance, NULL
+    );
+
+    hEmbedLSB = CreateWindowEx(
+        0, L"EDIT", L"",
+        WS_VISIBLE | WS_CHILD | WS_BORDER | ES_LEFT,
+        40, 150, 200, 150,
+        hwnd, (HMENU)10, hInstance, NULL
+    );
+
+    HWND hLabelEmbedLSB = CreateWindowEx(
+        0, L"STATIC", L"Ecrire un message code :",
+        WS_VISIBLE | WS_CHILD,
+        40, 130, 200, 20,
+        hwnd, NULL, hInstance, NULL
+    );
+
+    HWND hButtonEmbedLSB = CreateWindowEx(
+        0, L"BUTTON", L"Enregistrer",
+        WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+        40, 300, 200, 20,
+        hwnd, (HMENU)1, hInstance, NULL
     );
 
     if (!hwnd) {
@@ -63,9 +85,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, L"Fichier");
 
     AppendMenu(hSubMenu, MF_STRING, 2, L"Extraire le message");
-    AppendMenu(hSubMenu, MF_STRING, 3, L"Integrer un message");
-    AppendMenu(hSubMenu, MF_STRING, 4, L"Sauvegarder l'image code");
-    AppendMenu(hSubMenu, MF_STRING, 5, L"Charger une image code");
+    // AppendMenu(hSubMenu, MF_STRING, 3, L"Integrer un message");
+    AppendMenu(hSubMenu, MF_STRING, 4, L"Sauvegarder une image");
+    AppendMenu(hSubMenu, MF_STRING, 5, L"Charger une image");
     AppendMenu(hSubMenu, MF_SEPARATOR, 0, NULL); // Sépare le bouton quitter des autre boutons
     AppendMenu(hSubMenu, MF_STRING, 6, L"Quitter");
 
@@ -119,7 +141,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
-        if (LOWORD(wParam) == LOAD_IMAGE) {
+        if (LOWORD(lParam) == SAVE_MESSAGE)
+        {
+            // Sauvegarde le message codé dans une image
+        }
+
+        // Enregistre le message codé dans l'image
+        if (LOWORD(wParam) == 1)
+        {
+            wchar_t buffer[1024] = {};
+            GetWindowText(hEmbedLSB, buffer, sizeof(buffer) / sizeof(wchar_t));
+            MessageBox(hwnd, buffer, L"Sauvegarde", MB_OK);
+        }
+
+        else if (LOWORD(wParam) == LOAD_IMAGE) {
 
             if (GetOpenFileName(&ofn)) {
 
