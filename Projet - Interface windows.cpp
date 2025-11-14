@@ -8,10 +8,7 @@ HWND hImage;
 HBITMAP hBmp = NULL;
 OPENFILENAME ofn;
 
-// ------------------------------------------------------------
-//                  POINT D'ENTRÉE WINDOWS
-// ------------------------------------------------------------
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
     WNDCLASS wc = {};
     wc.lpfnWndProc = WndProc;
@@ -50,9 +47,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         hwnd, NULL, hInstance, NULL
     );
 
-    // ------------------------------------------------------------
-    //                     ZONE D'AFFICHAGE BMP
-    // ------------------------------------------------------------
     hImage = CreateWindowEx(
         0, L"STATIC", NULL,
         WS_VISIBLE | WS_CHILD | SS_BITMAP | WS_BORDER,
@@ -60,9 +54,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         hwnd, (HMENU)10, hInstance, NULL
     );
 
-    // ------------------------------------------------------------
-    //                          MENU
-    // ------------------------------------------------------------
     HMENU hMenu = CreateMenu();
     HMENU hSubMenu = CreatePopupMenu();
 
@@ -88,9 +79,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     return (int)msg.wParam;
 }
 
-// ------------------------------------------------------------
-//              FONCTION DE TRAITEMENT DES MESSAGES
-// ------------------------------------------------------------
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     wchar_t szFile[260] = {};
@@ -114,10 +102,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
-
-        // --------------------------------------------------------------------
-        //                     CHARGER UNE IMAGE BMP (ID = 4)
-        // --------------------------------------------------------------------
         if (LOWORD(wParam) == 4) {
 
             if (GetOpenFileName(&ofn))
