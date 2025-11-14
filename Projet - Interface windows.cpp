@@ -1,5 +1,12 @@
 #include <windows.h>
 #include <fstream>
+#include "ImageManager.h"
+
+#define ADD_MESSAGE 3
+#define LOAD_IMAGE 5
+#define LEAVE 6
+
+ImageManager imageManager;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -19,7 +26,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     }
 
     HWND hwnd = CreateWindowEx(
-        0, L"MainWindow", L"Interface window", WS_OVERLAPPEDWINDOW,
+        0, L"MainWindow", L"Gestionnaire de fichier BMP", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, 1600, 900,
         NULL, NULL, hInstance, NULL
     );
@@ -56,9 +63,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, L"Fichier");
 
     AppendMenu(hSubMenu, MF_STRING, 2, L"Extraire le message");
-    AppendMenu(hSubMenu, MF_STRING, 3, L"Sauvegarder l'image code");
-    AppendMenu(hSubMenu, MF_STRING, 4, L"Charger l'image code");
-    AppendMenu(hSubMenu, MF_STRING, 5, L"Integrer un message texte dans l'image");
+    AppendMenu(hSubMenu, MF_STRING, 3, L"Integrer un message");
+    AppendMenu(hSubMenu, MF_STRING, 4, L"Sauvegarder l'image code");
+    AppendMenu(hSubMenu, MF_STRING, 5, L"Charger une image code");
     AppendMenu(hSubMenu, MF_SEPARATOR, 0, NULL); // Sépare le bouton quitter des autre boutons
     AppendMenu(hSubMenu, MF_STRING, 6, L"Quitter");
 
@@ -87,6 +94,8 @@ unsigned int offsetTitle = 275; // Pour faire le décalage du texte plus efficac
 int xTitle = 800 - offsetTitle;      // Position où afficher le texte
 int yTitle = 50;
 
+HBITMAP hBitmap;
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     wchar_t szFile[260] = {};
@@ -110,59 +119,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
-        if (LOWORD(wParam) == 4) {
+        if (LOWORD(wParam) == LOAD_IMAGE) {
+
             if (GetOpenFileName(&ofn)) {
-                if (hBmp) { DeleteObject(hBmp); }
-                hBmp = (HBITMAP)LoadImage(NULL, ofn.lpstrFile, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
 
-                // Si cette erreur apparait, vérifier que l'image BMP n'est pas compressée.
-                if (!hBmp) { MessageBox(hwnd, L"Impossible de charger le fichier BMP.", L"Erreur de chargement", MB_ICONERROR); }
-                else {
-                    // Redimensionner la fenêtre d'affichage par rapport au titre.
-                    BITMAP bmp;
-                    GetObject(hBmp, sizeof(BITMAP), &bmp);
+                HBITMAP hBitmap = (HBITMAP)LoadImage(
+                    NULL, L"exemple.bmp",
+                    IMAGE_BITMAP, 0, 0,
+                    LR_LOADFROMFILE | LR_CREATEDIBSECTION
+                );
 
-                    int imageX = xTitle; // = (Pos début du texte + Pos fin du texte) / 2
-                    int imageY = yTitle + sizeTitle.cy + 10;
-                    int cx = bmp.bmWidth;
-                    int cy = bmp.bmHeight;
-
-                    SetWindowPos(hImage, NULL, imageX, imageY, cx, cy, SWP_NOZORDER);
-
-                    SendMessage(hImage, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBmp);
-                }
+                SendMessage(hImage, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
             }
         }
 
-        else if (LOWORD(wParam) == 6) {
+        else if (LOWORD(wParam) == LEAVE) {
             DestroyWindow(hwnd);
         }
         break;
 
     case WM_PAINT: {
-        HFONT hfontTitle = CreateFontA(
-            40,                        // taille du texte (en pixels)
-            0,                         // largeur (0 = automatique)
-            0, 0,                      // angle d'orientation (x, y)
-            FW_NORMAL,                 // texte en gras
-            FALSE,                     // italique
-            FALSE,                     // souligné
-            FALSE,                     // barré
-            DEFAULT_CHARSET,           // charset
-            OUT_CHARACTER_PRECIS,      // précision de sortie
-            CLIP_CHARACTER_PRECIS,     // précision du clipping du texte
-            CLEARTYPE_QUALITY,         // qualité du rendu du texte
-            DEFAULT_PITCH | FF_DONTCARE, // ???
-            "Arial"                    // nom de la police
-        );
+        imageManager.AddTitle(hdcTitle, hwnd, psTitle, title, sizeTitle, xTitle, yTitle);
 
-        psTitle;
-        hdcTitle = BeginPaint(hwnd, &psTitle);
-        GetTextExtentPoint32A(hdcTitle, title, strlen(title), &sizeTitle);
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
 
-        (HFONT)SelectObject(hdcTitle, hfontTitle);
-        TextOutA(hdcTitle, xTitle, yTitle, title, strlen(title));
-        EndPaint(hwnd, &psTitle);
+        imageManager.DrawBMPFile(hwnd, hdc, hBitmap);
+        EndPaint(hwnd, &ps);
     }
     break;
 

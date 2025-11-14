@@ -124,14 +124,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="ImageManager.h" />
     <ClInclude Include="Projet - Interface windows.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="Stego_lsb.h" />
+    <ClInclude Include="StegEngine.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ImageManager.cpp" />
     <ClCompile Include="Projet - Interface windows.cpp" />
-    <ClCompile Include="Stego_lsb.cpp" />
+    <ClCompile Include="StegEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Projet - Interface windows.rc" />
