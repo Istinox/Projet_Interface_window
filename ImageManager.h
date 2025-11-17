@@ -45,9 +45,5 @@ public:
             DeleteDC(hdcMem);
         }
     }
-
-    void ExtractMessageBMP() {
-       // ...
-    }
 };
 

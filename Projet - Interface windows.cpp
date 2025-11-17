@@ -1,14 +1,18 @@
 #include <windows.h>
 #include <fstream>
 #include <bitset>
+#include <vector>
 #include "ImageManager.h"
+#include "StegEngine.h"
 
+#define WRITE_MESSAGE 1
 #define EXTRACT_MESSAGE 2
 #define SAVE_MESSAGE 4
 #define LOAD_IMAGE 5
 #define LEAVE 6
 
 ImageManager imageManager;
+StegEngine stegEngine;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -146,66 +150,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         if (LOWORD(lParam) == SAVE_MESSAGE)
         {
-            // Sauvegarde le message codé dans une image
+            // Sauvegarde l'image contenant le message codé
         }
 
         else if (LOWORD(lParam) == EXTRACT_MESSAGE)
         {
-            // Sauvegarde le message codé dans une image
+            // Extrait le message codé présent dans une image
         }
 
-        // Enregistre le message codé dans l'image
-        else if (LOWORD(wParam) == 1)
+        else if (LOWORD(wParam) == WRITE_MESSAGE)
         {
             wchar_t buffer[1024] = {};
-
-            // --------------------------------------------- //
-
-            // Récupération des dimensions de l'image
-            BITMAP bmp;
-            GetObject(hBitmap, sizeof(BITMAP), &bmp);
-
-            int width = bmp.bmWidth;
-            int height = bmp.bmHeight;
-            int bpp = bmp.bmBitsPixel;
-
-            // Création d'un HDC pour manipuler l'image
-            HDC hdcMem = CreateCompatibleDC(NULL);
-            SelectObject(hdcMem, hBitmap);
-
-            // Préparation du bitmapinfo pour récupérer les pixels correctement
-            BITMAPINFO bmi = {};
-            bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-            bmi.bmiHeader.biWidth = bmp.bmWidth;
-            bmi.bmiHeader.biHeight = bmp.bmHeight;
-            bmi.bmiHeader.biPlanes = 1;
-            bmi.bmiHeader.biBitCount = bmp.bmBitsPixel;
-            bmi.bmiHeader.biCompression = BI_RGB;
-
-            int rowSize = ((bmp.bmWidth * bmp.bmBitsPixel + 31) / 32) * 4;
-            int imageSize = rowSize * bmp.bmHeight;
-            BYTE* pixels = new BYTE[imageSize];
-
-            GetDIBits(hdcMem, hBitmap, 0, bmp.bmHeight, pixels, &bmi, DIB_RGB_COLORS);
-
-            // --------------------------------------------- //
-
-            // Transforme le message en code binaire
-            for (wchar_t c : buffer)
-            {
-                std::bitset<8>(c);
-            }
-
-            // Parcours chaque pixels dans l'image
-            for (int y = 0; y < height; ++y) {
-                for (int x = 0; x < width; ++x) {
-                    int idx = (height - 1 - y) * rowSize + x * 3;
-                    uint8_t B = pixels[idx];
-                    uint8_t G = pixels[idx + 1];
-                    uint8_t R = pixels[idx + 2];
-                }
-            }
-
+            stegEngine.EmbedLSB(hBitmap);
             GetWindowText(hEmbedLSB, buffer, sizeof(buffer) / sizeof(wchar_t));
             MessageBox(hwnd, buffer, L"Sauvegarde", MB_OK);
         }
