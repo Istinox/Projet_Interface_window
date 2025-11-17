@@ -7,9 +7,9 @@
 
 #define WRITE_MESSAGE 1
 #define EXTRACT_MESSAGE 2
-#define SAVE_MESSAGE 4
-#define LOAD_IMAGE 5
-#define LEAVE 6
+#define SAVE_MESSAGE 3
+#define LOAD_IMAGE 4
+#define LEAVE 5
 
 ImageManager imageManager;
 StegEngine stegEngine;
@@ -91,11 +91,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, L"Fichier");
 
     AppendMenu(hSubMenu, MF_STRING, 2, L"Extraire le message");
-    // AppendMenu(hSubMenu, MF_STRING, 3, L"Integrer un message");
-    AppendMenu(hSubMenu, MF_STRING, 4, L"Sauvegarder une image");
-    AppendMenu(hSubMenu, MF_STRING, 5, L"Charger une image");
+    AppendMenu(hSubMenu, MF_STRING, 3, L"Sauvegarder une image");
+    AppendMenu(hSubMenu, MF_STRING, 4, L"Charger une image");
     AppendMenu(hSubMenu, MF_SEPARATOR, 0, NULL); // Sépare le bouton quitter des autre boutons
-    AppendMenu(hSubMenu, MF_STRING, 6, L"Quitter");
+    AppendMenu(hSubMenu, MF_STRING, 5, L"Quitter");
 
     SetMenu(hwnd, hMenu);
 
@@ -118,7 +117,7 @@ HDC hdcTitle;
 PAINTSTRUCT psTitle;
 SIZE sizeTitle;
 const char* title = "GESTIONNAIRE DE FICHIER BMP";
-unsigned int offsetTitle = 275; // Pour faire le décalage du texte plus efficacement
+unsigned int offsetTitle = 275;      // Pour faire le décalage du texte plus efficacement
 int xTitle = 800 - offsetTitle;      // Position où afficher le texte
 int yTitle = 50;
 
@@ -163,7 +162,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             wchar_t buffer[1024] = {};
             stegEngine.EmbedLSB(hBitmap);
             GetWindowText(hEmbedLSB, buffer, sizeof(buffer) / sizeof(wchar_t));
-            MessageBox(hwnd, buffer, L"Sauvegarde", MB_OK);
+            MessageBox(hwnd, L"Ecriture effectue avec succes !", L"Sauvegarde", MB_OK);
         }
 
         else if (LOWORD(wParam) == LOAD_IMAGE) {

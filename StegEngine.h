@@ -5,17 +5,17 @@
 
 class StegEngine
 {
+private:
+    BITMAP bmp;
+    int width = bmp.bmWidth;
+    int height = bmp.bmHeight;
+    int bpp = bmp.bmBitsPixel;
+    wchar_t buffer[1024] = {};
 public:
 	void EmbedLSB(HBITMAP hBitmap) {
-        wchar_t buffer[1024] = {};
 
         // Récupération des dimensions de l'image
-        BITMAP bmp;
         GetObject(hBitmap, sizeof(BITMAP), &bmp);
-
-        int width = bmp.bmWidth;
-        int height = bmp.bmHeight;
-        int bpp = bmp.bmBitsPixel;
 
         // Création d'un HDC pour manipuler l'image
         HDC hdcMem = CreateCompatibleDC(NULL);
@@ -58,8 +58,8 @@ public:
                 int idx = (height - 1 - y) * rowSize + x * 3;
 
                 // le LSB du bleu du pixel
-                pixels[idx] &= 0xFE;
-                pixels[idx] |= bits[bitIndex++];
+                pixels[idx] &= 0xFE; // On supprime le LSB
+                pixels[idx] |= bits[bitIndex++]; // On le remplace
                 if (bitIndex >= bits.size()) break; // Si on a finit d'écrire le message, on termine la boucle.
 
                 // le LSB du vert du pixel

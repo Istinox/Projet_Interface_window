@@ -1,6 +1,5 @@
 #pragma once
 #include <windows.h>
-#define ADD_IMAGE 4
 
 class ImageManager
 {
@@ -23,10 +22,10 @@ public:
         );
 
         hdcTitle = BeginPaint(hwnd, &psTitle);
-        GetTextExtentPoint32A(hdcTitle, title, strlen(title), &sizeTitle);
+        GetTextExtentPoint32A(hdcTitle, title, (int)strlen(title), &sizeTitle);
 
         (HFONT)SelectObject(hdcTitle, hfontTitle);
-        TextOutA(hdcTitle, xTitle, yTitle, title, strlen(title));
+        TextOutA(hdcTitle, xTitle, yTitle, title, (int)strlen(title));
         EndPaint(hwnd, &psTitle);
 	}
 
@@ -44,6 +43,9 @@ public:
             SelectObject(hdcMem, hOld);
             DeleteDC(hdcMem);
         }
+    }
+
+    void SaveBMPFile() {
     }
 };
 
