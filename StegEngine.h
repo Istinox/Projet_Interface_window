@@ -10,9 +10,9 @@ private:
     int width = bmp.bmWidth;
     int height = bmp.bmHeight;
     int bpp = bmp.bmBitsPixel;
-    wchar_t buffer[1024] = {};
+
 public:
-	void EmbedLSB(HBITMAP hBitmap) {
+	void EmbedLSB(HBITMAP hBitmap, wchar_t buffer[1024]) {
 
         // Récupération des dimensions de l'image
         GetObject(hBitmap, sizeof(BITMAP), &bmp);
@@ -41,12 +41,12 @@ public:
 
         // Transforme le message en code binaire
         std::vector<bool> bits;
-        for (wchar_t c : buffer)
-        {
-            std::bitset<8> b(c);  // b = bits du caractère c
-            for (int i = 0; i < 8; ++i)
-            {
-                bits.push_back(b[i]);  // on stocke chaque bit dans "bits"
+
+        // Il faudrait plutôt prendre la taille du buffer plutôt que sa taille max..
+        for (size_t i = 0; i < 1024; ++i) {
+            std::bitset<8> b(buffer[i]);
+            for (int j = 0; j < 8; ++j) {
+                bits.push_back(b[j]);
             }
         }
 

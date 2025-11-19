@@ -45,7 +45,44 @@ public:
         }
     }
 
-    void SaveBMPFile() {
+    void SaveBMPFile(HBITMAP hBitmap, HDC hdc, const char* filename) {
+        BITMAP bmp;
+        GetObject(hBitmap, sizeof(BITMAP), &bmp);
+
+        BITMAPFILEHEADER bmfHeader;
+        BITMAPINFOHEADER biHeader;
+
+        biHeader.biSize = sizeof(BITMAPINFOHEADER);
+        biHeader.biWidth = bmp.bmWidth;
+        biHeader.biHeight = bmp.bmHeight;
+        biHeader.biPlanes = 1;
+        biHeader.biBitCount = 24; // le nombre de bits pour le RGB (8 bits par couleur)
+        biHeader.biCompression = BI_RGB; // (pas de compression)
+        biHeader.biSizeImage = ((bmp.bmWidth * biHeader.biBitCount + 31) / 32) * 4 * bmp.bmHeight;
+
+        DWORD dwBmpSize = biHeader.biSizeImage;
+
+        // Allocation mémoire pour les pixels
+        HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
+        char* lpbitmap = (char*)GlobalLock(hDIB);
+
+        // Récupération des pixels
+        GetDIBits(hdc, hBitmap, 0, (UINT)bmp.bmHeight, lpbitmap, (BITMAPINFO*)&biHeader, DIB_RGB_COLORS);
+
+        // Préparation de l’en-tête du fichier
+        HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+        DWORD dwSizeofFileHeader = sizeof(BITMAPFILEHEADER);
+        DWORD dwSizeofInfoHeader = sizeof(BITMAPINFOHEADER);
+
+        bmfHeader.bfOffBits = dwSizeofFileHeader + dwSizeofInfoHeader;
+        bmfHeader.bfSize = dwSizeofFileHeader + dwSizeofInfoHeader + dwBmpSize;
+        bmfHeader.bfType = 0x4D42; // "BM"
+
+        DWORD dwWritten;
+        WriteFile(hFile, (LPSTR)&bmfHeader, dwSizeofFileHeader, &dwWritten, NULL);
+        WriteFile(hFile, (LPSTR)&biHeader, dwSizeofInfoHeader, &dwWritten, NULL);
+        WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwWritten, NULL);
     }
 };
 

@@ -1,7 +1,4 @@
 #include <windows.h>
-#include <fstream>
-#include <bitset>
-#include <vector>
 #include "ImageManager.h"
 #include "StegEngine.h"
 
@@ -117,7 +114,7 @@ HDC hdcTitle;
 PAINTSTRUCT psTitle;
 SIZE sizeTitle;
 const char* title = "GESTIONNAIRE DE FICHIER BMP";
-unsigned int offsetTitle = 275;      // Pour faire le décalage du texte plus efficacement
+int offsetTitle = 275;      // Pour faire le décalage du texte plus efficacement
 int xTitle = 800 - offsetTitle;      // Position où afficher le texte
 int yTitle = 50;
 
@@ -147,12 +144,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_COMMAND:
-        if (LOWORD(lParam) == SAVE_MESSAGE)
+        if (LOWORD(wParam) == SAVE_MESSAGE)
         {
-            // Sauvegarde l'image contenant le message codé
+            // Demander à l’utilisateur où sauvegarder
+            wchar_t szSaveFile[MAX_PATH] = {};
+            OPENFILENAME ofnSave = {};
+            ofnSave.lStructSize = sizeof(ofnSave);
+            ofnSave.lpstrFile = szSaveFile;
+            ofnSave.nMaxFile = sizeof(szSaveFile);
+            ofnSave.lpstrFilter = L"Fichiers BMP\0*.bmp\0";
+            ofnSave.Flags = OFN_OVERWRITEPROMPT; // Vérifie si le fichier existe déjà pour avertir l'utilisateur
+            ofnSave.lpstrDefExt = L"bmp"; // Ajoute une extension par défaut
+
+            if (GetSaveFileName(&ofnSave)) {
+                // Conversion du répertoire char en pointeur char
+                char filename[MAX_PATH];
+                WideCharToMultiByte(CP_ACP, 0, szSaveFile, -1, filename, MAX_PATH, NULL, NULL);
+
+                HDC hdc = GetDC(hwnd);
+                imageManager.SaveBMPFile(hBitmap, hdc, filename);
+
+                MessageBox(hwnd, L"Image sauvegardee avec succes !", L"Sauvegarde", MB_OK);
+            }
         }
 
-        else if (LOWORD(lParam) == EXTRACT_MESSAGE)
+        else if (LOWORD(wParam) == EXTRACT_MESSAGE)
         {
             // Extrait le message codé présent dans une image
         }
@@ -160,7 +176,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         else if (LOWORD(wParam) == WRITE_MESSAGE)
         {
             wchar_t buffer[1024] = {};
-            stegEngine.EmbedLSB(hBitmap);
+            stegEngine.EmbedLSB(hBitmap, buffer);
             GetWindowText(hEmbedLSB, buffer, sizeof(buffer) / sizeof(wchar_t));
             MessageBox(hwnd, L"Ecriture effectue avec succes !", L"Sauvegarde", MB_OK);
         }
@@ -188,9 +204,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         imageManager.AddTitle(hdcTitle, hwnd, psTitle, title, sizeTitle, xTitle, yTitle);
 
         PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
+        HDC hdcImage = BeginPaint(hwnd, &ps);
 
-        imageManager.DrawBMPFile(hwnd, hdc, hBitmap);
+        imageManager.DrawBMPFile(hwnd, hdcImage, hBitmap);
         EndPaint(hwnd, &ps);
     }
     break;
