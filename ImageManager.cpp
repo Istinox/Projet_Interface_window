@@ -3,19 +3,27 @@
 #include <vector>
 #include <cstring>
 
-HBITMAP ImageManager::LoadFromFile(const std::wstring& path, std::wstring& err) {
+using namespace std;
+
+HBITMAP ImageManager::LoadFromFile(const wstring& path, wstring& erreur) {
     HBITMAP hbm = (HBITMAP)LoadImageW(NULL, path.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
     if (!hbm) {
-        err = L"Échec du chargement de l'image.";
+        erreur = L"Échec du chargement de l'image.";
     }
     return hbm;
 }
 
-bool ImageManager::SaveToFile(HBITMAP hBitmap, const std::wstring& path, std::wstring& err) {
-    if (!hBitmap) { err = L"Aucun bitmap à sauvegarder"; return false; }
+bool ImageManager::SaveToFile(HBITMAP hBitmap, const wstring& path, wstring& erreur) {
+    if (!hBitmap) { 
+        erreur = L"Aucun bitmap à sauvegarder"; 
+        return false; 
+    }
 
     BITMAP bmp = {};
-    if (GetObject(hBitmap, sizeof(BITMAP), &bmp) == 0) { err = L"GetObject échoué"; return false; }
+    if (GetObject(hBitmap, sizeof(BITMAP), &bmp) == 0) { 
+        erreur = L"GetObject échoué"; 
+        return false; 
+    }
 
     // Préparer header pour écrire en 24bpp
     BITMAPINFOHEADER bi = {};
@@ -29,7 +37,7 @@ bool ImageManager::SaveToFile(HBITMAP hBitmap, const std::wstring& path, std::ws
 
     int rowSize = ((bmp.bmWidth * bi.biBitCount + 31) / 32) * 4;
     int imageSize = rowSize * bmp.bmHeight;
-    std::vector<BYTE> pixels(imageSize);
+    vector<BYTE> pixels(imageSize);
 
     BITMAPINFO bmi = {};
     bmi.bmiHeader = bi;
@@ -37,7 +45,8 @@ bool ImageManager::SaveToFile(HBITMAP hBitmap, const std::wstring& path, std::ws
     HDC hdc = GetDC(NULL);
     if (GetDIBits(hdc, hBitmap, 0, bmp.bmHeight, pixels.data(), &bmi, DIB_RGB_COLORS) == 0) {
         ReleaseDC(NULL, hdc);
-        err = L"GetDIBits échoué";
+        erreur = L"GetDIBits échoué";
+
         return false;
     }
     ReleaseDC(NULL, hdc);
@@ -49,31 +58,43 @@ bool ImageManager::SaveToFile(HBITMAP hBitmap, const std::wstring& path, std::ws
     bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
     bfh.bfSize = (DWORD)(bfh.bfOffBits + imageSize);
 
-    // écrire fichier
-    std::ofstream ofs(path, std::ios::binary);
-    if (!ofs) { err = L"Impossible d'ouvrir le fichier en écriture"; return false; }
+    // écrire le fichier
+    ofstream ofs(path, ios::binary);
+    if (!ofs) { 
+        erreur = L"Impossible d'ouvrir le fichier en écriture"; 
+        return false; 
+    }
     ofs.write(reinterpret_cast<const char*>(&bfh), sizeof(bfh));
     ofs.write(reinterpret_cast<const char*>(&bi), sizeof(bi));
     ofs.write(reinterpret_cast<const char*>(pixels.data()), imageSize);
     ofs.close();
+
     return true;
 }
 
-void ImageManager::AddTitle(HDC hdcTitle, HWND hwnd, PAINTSTRUCT& psTitle, const char* title, SIZE& sizeTitle, int xTitle, int yTitle) {
+void ImageManager::AddTitle(HDC hdcTitle, HWND hwnd, PAINTSTRUCT psTitle, const char* title, SIZE sizeTitle, int xTitle, int yTitle) {
     HFONT hfontTitle = CreateFontA(
-        40, 0, 0, 0,
-        FW_NORMAL, FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial"
+        40,                        // taille du texte (en pixels)
+        0,                         // largeur (0 = automatique)
+        0, 0,                      // angle d'orientation (x, y)
+        FW_NORMAL,                 // texte en gras
+        FALSE,                     // italique
+        FALSE,                     // souligné
+        FALSE,                     // barré
+        DEFAULT_CHARSET,           // charset
+        OUT_CHARACTER_PRECIS,      // précision de sortie
+        CLIP_CHARACTER_PRECIS,     // précision du clipping du texte
+        CLEARTYPE_QUALITY,         // qualité du rendu du texte
+        DEFAULT_PITCH | FF_DONTCARE, // ???
+        "Arial"                    // nom de la police
     );
 
     hdcTitle = BeginPaint(hwnd, &psTitle);
     GetTextExtentPoint32A(hdcTitle, title, (int)strlen(title), &sizeTitle);
-    SelectObject(hdcTitle, hfontTitle);
+
+    (HFONT)SelectObject(hdcTitle, hfontTitle);
     TextOutA(hdcTitle, xTitle, yTitle, title, (int)strlen(title));
     EndPaint(hwnd, &psTitle);
-
-    DeleteObject(hfontTitle);
 }
 
 void ImageManager::DrawBMPFile(HWND hwnd, HDC hdc, HBITMAP hBitmap) {

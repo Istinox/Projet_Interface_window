@@ -217,6 +217,8 @@
 #include "ImageManager.h"
 #include "StegEngine.h"
 
+using namespace std;
+
 #define ID_BTN_WRITE     1
 #define ID_MENU_EXTRACT  2
 #define ID_MENU_SAVE     3
@@ -230,9 +232,9 @@ StegEngine stegEngine;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-HWND hImage = nullptr;
-HWND hEmbedLSB = nullptr;
-HBITMAP hBitmap = nullptr;
+HWND hImage = NULL;
+HWND hEmbedLSB = NULL;
+HBITMAP hBitmap = NULL;
 
 OPENFILENAMEW ofn;
 
@@ -245,7 +247,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 
     if (!RegisterClassW(&wc)) {
-        MessageBoxW(NULL, L"Erreur : Enregistrement de la classe échoué.", L"Erreur", MB_ICONERROR);
+        MessageBoxW(NULL, L"Erreur : Enregistrement de la classe echoue.", L"Erreur", MB_ICONERROR);
         return 0;
     }
 
@@ -256,7 +258,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     );
 
     if (!hwnd) {
-        MessageBoxW(NULL, L"Erreur : Création de la fenêtre échouée.", L"Erreur", MB_ICONERROR);
+        MessageBoxW(NULL, L"Erreur : Creation de la fenetre echouee.", L"Erreur", MB_ICONERROR);
         return 0;
     }
 
@@ -269,7 +271,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     );
 
     CreateWindowExW(
-        0, L"STATIC", L"Ecrire un message codé :",
+        0, L"STATIC", L"Ecrire un message code :",
         WS_VISIBLE | WS_CHILD,
         40, 130, 200, 20,
         hwnd, NULL, hInstance, NULL
@@ -278,7 +280,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     CreateWindowExW(
         0, L"BUTTON", L"Enregistrer dans l'image",
         WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-        40, 320, 200, 24,
+        40, 300, 200, 24,
         hwnd, (HMENU)ID_BTN_WRITE, hInstance, NULL
     );
 
@@ -286,57 +288,64 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     hImage = CreateWindowExW(
         0, L"STATIC", NULL,
         WS_VISIBLE | WS_CHILD | SS_BITMAP | WS_BORDER,
-        500, 40, 800, 600,
+        400, 150, 800, 600,
         hwnd, (HMENU)ID_STATIC_IMG, hInstance, NULL
     );
 
-    // Créer menu
-    HMENU hMenu = CreateMenu();
-    HMENU hSubMenu = CreatePopupMenu();
+    // Créer le menu
+    RECT rc;
+    GetClientRect(hwnd, &rc);
     AppendMenuW(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, L"Fichier");
     AppendMenuW(hSubMenu, MF_STRING, ID_MENU_EXTRACT, L"Extraire le message");
-    AppendMenuW(hSubMenu, MF_STRING, ID_MENU_SAVE, L"Sauvegarder une image...");
-    AppendMenuW(hSubMenu, MF_STRING, ID_MENU_LOAD, L"Charger une image...");
-    AppendMenuW(hSubMenu, MF_SEPARATOR, 0, NULL);
+    AppendMenuW(hSubMenu, MF_STRING, ID_MENU_SAVE, L"Sauvegarder une image");
+    AppendMenuW(hSubMenu, MF_STRING, ID_MENU_LOAD, L"Charger une image");
+    AppendMenuW(hSubMenu, MF_SEPARATOR, 0, NULL); // Pour séparer le bouton quitter du reste du menu
     AppendMenuW(hSubMenu, MF_STRING, ID_MENU_QUIT, L"Quitter");
     SetMenu(hwnd, hMenu);
 
-    // Préparer OPENFILENAMEW structure (utilisée pour Open/Save)
-    ZeroMemory(&ofn, sizeof(ofn));
+    // Préparer OPENFILENAMEW (utilisée pour Open/Save)
     static wchar_t szFile[260] = {};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile) / sizeof(wchar_t);
     ofn.lpstrFilter = L"Fichiers BMP\0*.bmp\0Tous fichiers\0*.*\0";
+    ofn.lpstrDefExt = L"BMP";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_OVERWRITEPROMPT;
+    MoveWindow(hImage, posX, posY, ctrlWidth, ctrlHeight, TRUE);
 
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
+    // Initialisation du menu
+    HMENU hMenu = CreateMenu();
+    HMENU hSubMenu = CreatePopupMenu();
+    AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, L"Fichier");
 
-    MSG msg = {};
-    while (GetMessageW(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
+    AppendMenu(hSubMenu, MF_STRING, 2, L"Extraire le message");
+    AppendMenu(hSubMenu, MF_STRING, 3, L"Sauvegarder une image");
+    AppendMenu(hSubMenu, MF_STRING, 4, L"Charger une image");
+    if (hBitmap) { DeleteObject(hBitmap); hBitmap = NULL; }
+
+    AppendMenu(hSubMenu, MF_SEPARATOR, 0, NULL); // Sépare le bouton quitter des autre boutons
+    AppendMenu(hSubMenu, MF_STRING, 5, L"Quitter");
+
+HDC hdcTitle;
+PAINTSTRUCT psTitle;
+SIZE sizeTitle;
+const char* title = "GESTIONNAIRE DE FICHIER BMP";
+unsigned int offsetTitle = 275;      // Pour faire le décalage du texte plus efficacement
+int xTitle = 800 - offsetTitle;      // Position où afficher le texte
+int yTitle = 50;
+
         DispatchMessageW(&msg);
     }
-
-    // Cleanup
-    if (hBitmap) { DeleteObject(hBitmap); hBitmap = nullptr; }
 
     return (int)msg.wParam;
 }
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-    case WM_CLOSE:
-        DestroyWindow(hwnd);
-        return 0;
-
-    case WM_DESTROY:
-        PostQuitMessage(0);
+HWND hEdit;
+HBITMAP hBmp = NULL;
+OPENFILENAME ofn;
+HDC hdcTitle;
         return 0;
 
     case WM_COMMAND:
@@ -347,19 +356,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case ID_BTN_WRITE:
         {
             if (!hBitmap) {
-                MessageBoxW(hwnd, L"Aucune image chargée.", L"Erreur", MB_ICONERROR);
+                MessageBoxW(hwnd, L"Aucune image chargee.", L"Erreur", MB_ICONERROR);
                 break;
             }
-
+SIZE sizeTitle;
             // Lire le texte depuis la zone d'édition
             wchar_t buffer[2048] = {};
             GetWindowTextW(hEmbedLSB, buffer, _countof(buffer));
-            std::wstring err;
-            if (!stegEngine.EmbedLSB(hBitmap, buffer, err)) {
-                MessageBoxW(hwnd, err.c_str(), L"Erreur", MB_ICONERROR);
+            wstring erreur;
+            if (!stegEngine.EmbedLSB(hBitmap, buffer, erreur)) {
+                MessageBoxW(hwnd, erreur.c_str(), L"Erreur", MB_ICONERROR);
             }
             else {
-                MessageBoxW(hwnd, L"Ecriture effectuée avec succès !", L"Succès", MB_OK);
+                MessageBoxW(hwnd, L"Ecriture effectuee avec succes !", L"Succes", MB_OK);
                 // Redessiner la fenêtre pour voir l'image mise à jour
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -371,26 +380,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ofn.lpstrFile[0] = L'\0';
             if (GetOpenFileNameW(&ofn))
             {
-                std::wstring err;
-                HBITMAP newBmp = imageManager.LoadFromFile(ofn.lpstrFile, err);
+                wstring erreur;
+                HBITMAP newBmp = imageManager.LoadFromFile(ofn.lpstrFile, erreur);
                 if (!newBmp)
                 {
-                    MessageBoxW(hwnd, err.c_str(), L"Erreur", MB_ICONERROR);
+                    MessageBoxW(hwnd, erreur.c_str(), L"Erreur", MB_ICONERROR);
                 }
                 else
                 {
                     if (hBitmap) { DeleteObject(hBitmap); hBitmap = nullptr; }
-
+    case WM_CLOSE:
                     hBitmap = newBmp;
 
-                    // Récupérer taille réelle du BMP
                     BITMAP bmp = {};
+                    RECT rc;
+        break;
                     GetObject(hBitmap, sizeof(bmp), &bmp);
                     int imgW = bmp.bmWidth;
                     int imgH = bmp.bmHeight;
 
-                    // Taille de la fenêtre client
-                    RECT rc;
                     GetClientRect(hwnd, &rc);
 
                     int winW = rc.right - rc.left;
@@ -410,53 +418,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
             }
             break;
-        }
-       
+            ofnSave.lStructSize = sizeof(ofnSave);
+            ofnSave.lpstrFile = szSaveFile;
 
         case ID_MENU_SAVE:
-        {
+            ofnSave.lpstrFilter = L"Fichiers BMP\0*.bmp\0";
             if (!hBitmap) {
-                MessageBoxW(hwnd, L"Aucune image à sauvegarder.", L"Erreur", MB_ICONERROR);
+                MessageBoxW(hwnd, L"Aucune image a sauvegarder.", L"Erreur", MB_ICONERROR);
                 break;
             }
-
-            // Préparer Save dialog
+                char filename[MAX_PATH];
             static wchar_t saveFile[260] = {};
             ofn.lpstrFile = saveFile;
             ofn.lpstrFile[0] = L'\0';
             ofn.nMaxFile = sizeof(saveFile) / sizeof(wchar_t);
             ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
-
+                imageManager.SaveBMPFile(hBitmap, hdc, filename);
             if (GetSaveFileNameW(&ofn)) {
-                std::wstring err;
-                if (!imageManager.SaveToFile(hBitmap, ofn.lpstrFile, err)) {
-                    MessageBoxW(hwnd, err.c_str(), L"Erreur", MB_ICONERROR);
+                wstring erreur;
+                if (!imageManager.SaveToFile(hBitmap, ofn.lpstrFile, erreur)) {
+                    MessageBoxW(hwnd, erreur.c_str(), L"Erreur", MB_ICONERROR);
                 }
                 else {
-                    MessageBoxW(hwnd, L"Image sauvegardée avec succès.", L"Succès", MB_OK);
+                    MessageBoxW(hwnd, L"Image sauvegardee avec succes.", L"Succes", MB_OK);
                 }
             }
-            // remettre lpstrFile à original buffer pour future open
             static wchar_t openBuf[260] = {};
             ofn.lpstrFile = openBuf;
             ofn.nMaxFile = sizeof(openBuf) / sizeof(wchar_t);
             break;
         }
-
+        else if (LOWORD(wParam) == EXTRACT_MESSAGE)
         case ID_MENU_EXTRACT:
         {
             if (!hBitmap) {
-                MessageBoxW(hwnd, L"Aucune image chargée.", L"Erreur", MB_ICONERROR);
+                MessageBoxW(hwnd, L"Aucune image chargee.", L"Erreur", MB_ICONERROR);
                 break;
             }
-            std::wstring extracted;
-            std::wstring err;
-            if (!stegEngine.ExtractLSB(hBitmap, extracted, err)) {
-                MessageBoxW(hwnd, err.c_str(), L"Erreur", MB_ICONERROR);
+            wstring Message;
+            wstring erreur;
+            if (!stegEngine.ExtractLSB(hBitmap, Message, erreur)) {
+                MessageBoxW(hwnd, erreur.c_str(), L"Erreur", MB_ICONERROR);
             }
             else {
-                // Affiche le message extrait (modal)
-                MessageBoxW(hwnd, extracted.c_str(), L"Message extrait", MB_OK);
+                // Affiche le message extrait
+                MessageBoxW(hwnd, Message.c_str(), L"Message extrait", MB_OK);
             }
             break;
         }
@@ -467,9 +473,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         default:
             break;
-        } // switch(id)
+        }
         break;
-    } // WM_COMMAND
+    }
     case WM_SIZE:
     {
         if (hImage && hBitmap)
@@ -481,7 +487,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // Dimensions fixes de la zone d'image
             int imgW = 800;
             int imgH = 600;
-
+            GetWindowText(hEmbedLSB, buffer, sizeof(buffer) / sizeof(wchar_t));
             // Calcul du centrage
             int posX = (winW - imgW) / 2;
             int posY = (winH - imgH) / 2;
@@ -490,20 +496,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
-
+            if (GetOpenFileName(&ofn)) {
     case WM_PAINT:
     {
+        // Dessine le titre au centre de l'application
+        imageManager.AddTitle(hdcTitle, hwnd, psTitle, title, sizeTitle, xTitle, yTitle);
+                    NULL, L"exemple.bmp",
+                    IMAGE_BITMAP, 0, 0,
+                    LR_LOADFROMFILE | LR_CREATEDIBSECTION
+                );
+
+                SendMessage(hImage, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
+            }
+        }
+
+        else if (LOWORD(wParam) == LEAVE) {
+            DestroyWindow(hwnd);
+        }
+        break;
+
+    case WM_PAINT: {
+        imageManager.AddTitle(hdcTitle, hwnd, psTitle, title, sizeTitle, xTitle, yTitle);
+
         PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
+        HDC hdcImage = BeginPaint(hwnd, &ps);
 
-        // Dessine le titre (utilise ImageManager::AddTitle)
-        SIZE sizeTitle = {};
-        const char* title = "GESTIONNAIRE DE FICHIER BMP";
-        imageManager.AddTitle(hdc, hwnd, ps, title, sizeTitle, 50, 20);
-
-
+        imageManager.DrawBMPFile(hwnd, hdcImage, hBitmap);
         EndPaint(hwnd, &ps);
-       
     }
     break;
 
