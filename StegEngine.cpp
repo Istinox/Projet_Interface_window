@@ -180,7 +180,6 @@ bool StegEngine::ExtractLSB(HBITMAP hBitmap, wstring& messageOut, wstring& err) 
         headerBytes[i] = val;
     }
 
-    // check MAGIC
     if (!(headerBytes[0] == 'S' && headerBytes[1] == 'T' && headerBytes[2] == 'E' && headerBytes[3] == 'G')) {
         err = L"Aucun message cache (MAGIC manquant)";
         return false;
@@ -188,16 +187,15 @@ bool StegEngine::ExtractLSB(HBITMAP hBitmap, wstring& messageOut, wstring& err) 
 
     uint32_t len = (uint32_t)((uint8_t)headerBytes[4] | ((uint8_t)headerBytes[5] << 8) | ((uint8_t)headerBytes[6] << 16) | ((uint8_t)headerBytes[7] << 24));
     uint64_t capacityBits = (uint64_t)bmp.bmWidth * (uint64_t)bmp.bmHeight * 3;
-    uint64_t requiredBits = (uint64_t)(8 + 4 + len) * 8; // header(8) + len(4) + payload
-    // but we already used 8 bytes for header; simpler: ensure len reasonable
-    uint64_t availablePayloadBits = capacityBits - 64; // after header bits
+    uint64_t requiredBits = (uint64_t)(8 + 4 + len) * 8;
+    uint64_t availablePayloadBits = capacityBits - 64;
     if ((uint64_t)len * 8 > availablePayloadBits) {
         err = L"Entete incoherent (longueur trop grande)";
         return false;
     }
 
     vector<char> payload(len, 0);
-    uint64_t bitStart = 8 * 8; // 64 bits already read
+    uint64_t bitStart = 8 * 8;
     for (uint32_t i = 0; i < len; ++i) {
         unsigned char val = 0;
         for (int bit = 0; bit < 8; ++bit) {

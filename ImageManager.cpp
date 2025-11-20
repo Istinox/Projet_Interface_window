@@ -8,7 +8,7 @@ using namespace std;
 HBITMAP ImageManager::LoadFromFile(const wstring& path, wstring& erreur) {
     HBITMAP hbm = (HBITMAP)LoadImageW(NULL, path.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
     if (!hbm) {
-        erreur = L"Échec du chargement de l'image.";
+        erreur = L"Echec du chargement de l'image.";
     }
     return hbm;
 }
@@ -21,7 +21,7 @@ bool ImageManager::SaveToFile(HBITMAP hBitmap, const wstring& path, wstring& err
 
     BITMAP bmp = {};
     if (GetObject(hBitmap, sizeof(BITMAP), &bmp) == 0) { 
-        erreur = L"GetObject échoué"; 
+        erreur = L"Get Object echoue"; 
         return false; 
     }
 
