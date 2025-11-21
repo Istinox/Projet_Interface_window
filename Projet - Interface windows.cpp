@@ -239,7 +239,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case ID_MENU_EXTRACT:
         {
             if (!hBitmap) {
-                MessageBoxW(hwnd, L"Aucune image chargée.", L"Erreur", MB_ICONERROR);
+                MessageBoxW(hwnd, L"Aucune image chargee.", L"Erreur", MB_ICONERROR);
                 break;
             }
             std::wstring extracted;

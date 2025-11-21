@@ -51,7 +51,7 @@ bool ImageManager::SaveToFile(HBITMAP hBitmap, const wstring& path, wstring& err
     }
     ReleaseDC(NULL, hdc);
 
-    // Préparer BITMAPFILEHEADER
+    // Prépare le BITMAPFILEHEADER
     BITMAPFILEHEADER bfh = {};
     bfh.bfType = 0x4D42; // 'BM'
     // bfOffBits doit être aligné : sizeof(BITMAPFILEHEADER) + size of BITMAPINFOHEADER
@@ -105,7 +105,7 @@ void ImageManager::DrawBMPFile(HWND hwnd, HDC hdc, HBITMAP hBitmap) {
         BITMAP bmp;
         GetObject(hBitmap, sizeof(bmp), &bmp);
 
-        // On dessine à la position (250,50) comme dans ton code initial
+        // On dessine à la position (250,50) pour que ça soit en dessous du titre
         BitBlt(hdc, 250, 50, bmp.bmWidth, bmp.bmHeight, hdcMem, 0, 0, SRCCOPY);
 
         SelectObject(hdcMem, hOld);

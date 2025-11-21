@@ -189,6 +189,7 @@ bool StegEngine::ExtractLSB(HBITMAP hBitmap, wstring& messageOut, wstring& err) 
     uint64_t capacityBits = (uint64_t)bmp.bmWidth * (uint64_t)bmp.bmHeight * 3;
     uint64_t requiredBits = (uint64_t)(8 + 4 + len) * 8;
     uint64_t availablePayloadBits = capacityBits - 64;
+
     if ((uint64_t)len * 8 > availablePayloadBits) {
         err = L"Entete incoherent (longueur trop grande)";
         return false;
